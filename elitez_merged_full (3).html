@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Elite Z — Merged Full Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --accent:#0b63b0; --dark:#071827; --muted:#f6f9fc; --card:#ffffff;
+  --radius:12px; --trans:300ms;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;font-family:'Poppins',system-ui,Segoe UI,Roboto,Arial;
+  background:var(--muted);color:var(--dark);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Header */
+.header{
+  position:fixed;left:0;right:0;top:0;z-index:220;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px; transition:background var(--trans),box-shadow var(--trans);
+  background:transparent;color:white;
+}
+.header.solid{background:#fff;color:var(--dark);box-shadow:0 8px 30px rgba(10,20,30,0.06)}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700}
+.logo{width:44px;height:44;border-radius:10px;background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:800;box-shadow:0 6px 16px rgba(11,99,176,0.08)}
+.header .left, .header .right{display:flex;align-items:center;gap:12px}
+
+/* icons */
+.icon-btn{background:transparent;border:0;cursor:pointer;font-size:20px;padding:6px;border-radius:8px;color:inherit}
+
+/* Left Sidebar (menu) */
+.left-sidebar{
+  position:fixed;left:-270px;top:0;height:100vh;width:260px;background:var(--card);z-index:200;
+  box-shadow:2px 0 30px rgba(12,22,36,0.06);padding:80px 18px;transition:left var(--trans);
+}
+.left-sidebar.open{left:0}
+.left-sidebar a{display:block;padding:10px 6px;margin:6px 0;color:var(--dark);font-weight:600}
+
+/* Right Cart Drawer */
+.cart-drawer{
+  position:fixed;right:-420px;top:0;height:100vh;width:380px;background:var(--card);z-index:200;
+  box-shadow:-24px 0 60px rgba(10,20,30,0.12);transition:right var(--trans);display:flex;flex-direction:column;padding:80px 18px;
+}
+.cart-drawer.open{right:0}
+.cart-list{flex:1;overflow:auto;display:flex;flex-direction:column;gap:12px;padding-right:4px}
+
+/* Overlay */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.45);opacity:0;pointer-events:none;transition:opacity var(--trans);z-index:190;
+}
+.overlay.show{opacity:1;pointer-events:auto}
+
+/* Hero */
+.hero{height:60vh;min-height:420px;margin-top:64px;background-image:linear-gradient(180deg,rgba(7,36,58,0.6),rgba(11,99,176,0.2)), url('https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=1600&q=60');background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;color:white;text-align:center;padding:0 20px}
+.hero h1{font-size:clamp(28px,6vw,52px);margin:0 0 12px}
+.hero p{opacity:0.95;margin:0 0 16px;font-weight:300}
+.cta{background:var(--card);color:var(--accent);padding:10px 16px;border-radius:10px;font-weight:700;display:inline-block}
+
+/* Main layout */
+.main{max-width:1200px;margin:34px auto;padding:0 20px}
+.section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.search{padding:8px 12px;border-radius:10px;border:1px solid #e6eefb;width:260px}
+
+/* Products grid */
+.products-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 6px 18px rgba(15,23,36,0.06);transition:transform var(--trans),box-shadow var(--trans);display:flex;flex-direction:column}
+.card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(11,99,176,0.06)}
+.media{height:320px;background:#f3f6fb;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.media img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 350ms ease}
+.card:hover .media img{transform:scale(1.04)}
+.meta{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.title{font-weight:600}
+.price{font-weight:700;color:var(--accent)}
+
+/* modal product */
+.modal{position:fixed;left:0;top:0;width:100%;height:100%;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.5);z-index:260;padding:20px}
+.modal.open{display:flex}
+.modal-card{background:var(--card);width:100%;max-width:980px;border-radius:12px;overflow:hidden;display:flex;gap:0;box-shadow:0 30px 80px rgba(10,20,30,0.12)}
+.modal-media{flex:1;min-height:320px;background:#f3f6fb}
+.modal-meta{flex:1;padding:18px;display:flex;flex-direction:column;gap:12px}
+
+/* small */
+.small-btn{border:1px solid #e6eefb;background:white;padding:8px 10px;border-radius:8px;cursor:pointer}
+.qty-controls{display:flex;gap:8px;align-items:center}
+
+.reveal{opacity:0;transform:translateY(12px);transition:opacity 520ms ease,transform 520ms ease}
+.reveal.visible{opacity:1;transform:none}
+
+/* responsive */
+@media(max-width:1024px){.products-grid{grid-template-columns:repeat(2,1fr)}; .media{height:260px}; .cart-drawer{width:320px}}
+@media(max-width:640px){.products-grid{grid-template-columns:1fr}; .media{height:220px}; .left-sidebar{width:220px} .cart-drawer{width:100%;right:-100%} .header{padding:10px} .hero{min-height:320px} .search{width:160px} .brand {font-size:16px} }
+</style>
+</head>
+<body>
+
+<header class="header" id="siteHeader">
+  <div class="left">
+    <button id="menuBtn" class="icon-btn" aria-label="Open menu">☰</button>
+    <div class="brand"><div class="logo">Z</div><div style="margin-left:6px">ELITE Z</div></div>
+  </div>
+  <div class="right">
+    <input id="searchInput" class="search" placeholder="Search products..." aria-label="Search products">
+    <button id="miniCartBtn" class="icon-btn" aria-label="Open cart">🛒 <span id="cartCount" style="display:none;background:var(--accent);color:white;padding:4px 8px;border-radius:999px;margin-left:6px;font-weight:700;font-size:12px"></span></button>
+  </div>
+</header>
+
+<!-- Left Sidebar Menu -->
+<nav class="left-sidebar" id="leftSidebar" aria-hidden="true">
+  <a href="#home" class="navlink">Home</a>
+  <a href="#products" class="navlink">Products</a>
+  <a href="#about" class="navlink">About</a>
+  <a href="#contact" class="navlink">Contact</a>
+</nav>
+
+<!-- Right Cart Drawer -->
+<aside class="cart-drawer" id="cartDrawer" aria-hidden="true">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+    <strong>Your Cart</strong>
+    <div style="display:flex;gap:8px">
+      <button id="clearCart" class="small-btn">Clear</button>
+      <button id="closeCart" class="small-btn">Close</button>
+    </div>
+  </div>
+  <div id="cartList" class="cart-list"></div>
+  <div style="border-top:1px solid #f1f5f9;padding-top:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="color:#374151">Subtotal</div>
+      <div style="font-weight:700" id="cartSubtotal">$0.00</div>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <button id="checkoutBtn" style="flex:1;background:var(--accent);color:white;padding:10px;border-radius:10px;border:0;font-weight:700">Checkout</button>
+    </div>
+  </div>
+</aside>
+
+<!-- Overlay -->
+<div id="overlay" class="overlay" aria-hidden="true"></div>
+
+<section class="hero" id="home" aria-label="Hero">
+  <div class="inner">
+    <h1>Elite Z — Wear Your Power</h1>
+    <p>Contemporary pieces. Clean cuts. Everyday luxury.</p>
+    <a class="cta" href="#products">Shop the collection</a>
+  </div>
+</section>
+
+<main class="main" id="main">
+  <section style="margin-top:18px;">
+    <div class="section-title">
+      <h2>Featured</h2>
+      <div style="display:flex;gap:12px;align-items:center">
+        <button id="viewAllBtn" class="small-btn">View All</button>
+      </div>
+    </div>
+    <div id="productsGrid" class="products-grid" aria-live="polite"></div>
+  </section>
+
+  <section id="about" style="margin-top:48px;padding-bottom:28px;">
+    <h2>About Elite Z</h2>
+    <p style="max-width:760px;color:#334155;line-height:1.6">Elite Z is a modern fashion label producing simple, timeless garments with careful attention to materials and fit. Designed for people who prefer subtle luxury.</p>
+  </section>
+
+  <section id="contact" style="margin-top:36px;padding-bottom:48px;">
+    <h2>Contact</h2>
+    <p style="max-width:760px;color:#334155;line-height:1.6">Email: hello@elitez.example • Instagram: @elitez</p>
+  </section>
+
+  <div class="footer" style="margin-top:36px;text-align:center;padding:30px 0;color:#6b7280">© 2025 Elite Z — Demo store (single file)</div>
+</main>
+
+<!-- Product Modal -->
+<div class="modal" id="productModal" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true">
+    <div class="modal-media" id="modalImg"></div>
+    <div class="modal-meta">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <h3 id="modalTitle" style="margin:0"></h3>
+          <div id="modalDesc" style="color:#64748b;font-size:14px;margin-top:6px">Minimal • Modern</div>
+        </div>
+        <div style="text-align:right">
+          <div id="modalPrice" style="font-weight:800;color:var(--accent)"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+        <div class="qty-controls">
+          <button id="decQty" class="small-btn">-</button>
+          <div id="qtyVal" style="min-width:32px;text-align:center">1</div>
+          <button id="incQty" class="small-btn">+</button>
+        </div>
+        <button id="addModalBtn" style="background:var(--accent);color:white;padding:10px;border-radius:10px;border:0;font-weight:700">Add to cart</button>
+      </div>
+      <div style="margin-top:8px"><button id="closeModal" class="small-btn">Close</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== Products data ===== */
+const PRODUCTS = [
+  { id:'p1', title:'Signature Tee', price:29.99, img:'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=60', desc:'Soft cotton tee with a clean fit.'},
+  { id:'p2', title:'Comfort Hoodie', price:59.00, img:'https://images.unsplash.com/photo-1602810318383-ea5e74cfa4d3?auto=format&fit=crop&w=1200&q=60', desc:'Cozy brushed fleece, roomy hood.'},
+  { id:'p3', title:'Classic Cap', price:18.50, img:'https://images.unsplash.com/photo-1620799139504-1c4c13e9b94b?auto=format&fit=crop&w=1200&q=60', desc:'Adjustable cap with embroidered logo.'},
+  { id:'p4', title:'Light Jacket', price:89.00, img:'https://images.unsplash.com/photo-1618354691249-379cfd9c9dcf?auto=format&fit=crop&w=1200&q=60', desc:'Wind-resistant shell with lining.'},
+  { id:'p5', title:'Everyday Sneakers', price:120.00, img:'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=1200&q=60', desc:'Lightweight sneakers for daily wear.'},
+  { id:'p6', title:'Regular Jeans', price:69.00, img:'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=1200&q=60', desc:'Classic straight fit denim.'}
+];
+
+/* ===== Render products into grid ===== */
+const grid = document.getElementById('productsGrid');
+function renderProducts(list){
+  grid.innerHTML='';
+  list.forEach(p=>{
+    const card = document.createElement('article');
+    card.className = 'card reveal';
+    card.innerHTML = `
+      <div class="media"><img loading="lazy" src="${p.img}" alt="${p.title}" /></div>
+      <div class="meta">
+        <div>
+          <div class="title">${p.title}</div>
+          <div style="font-size:13px;color:#64748b">Minimal • Modern</div>
+        </div>
+        <div style="text-align:right">
+          <div class="price">$${p.price.toFixed(2)}</div>
+          <button class="small-btn" data-id="${p.id}" style="margin-top:8px">View</button>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+  attachViewButtons();
+  revealOnScroll();
+}
+renderProducts(PRODUCTS);
+
+/* ===== reveal on scroll ===== */
+function revealOnScroll(){
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); });
+  },{threshold:0.12});
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+}
+revealOnScroll();
+
+/* ===== Header scroll behavior ===== */
+const header = document.getElementById('siteHeader');
+window.addEventListener('scroll', ()=> {
+  if(window.scrollY>30) header.classList.add('solid'); else header.classList.remove('solid');
+});
+
+/* ===== Sidebar (left) and Cart (right) logic ===== */
+const menuBtn = document.getElementById('menuBtn');
+const leftSidebar = document.getElementById('leftSidebar');
+const miniCartBtn = document.getElementById('miniCartBtn');
+const cartDrawer = document.getElementById('cartDrawer');
+const overlay = document.getElementById('overlay');
+const cartCountEl = document.getElementById('cartCount');
+
+menuBtn.addEventListener('click', ()=> {
+  // close cart if open
+  cartDrawer.classList.remove('open');
+  leftSidebar.classList.toggle('open');
+  overlay.classList.toggle('show');
+  // ensure overlay aria
+  overlay.setAttribute('aria-hidden', !overlay.classList.contains('show'));
+});
+miniCartBtn.addEventListener('click', ()=> {
+  leftSidebar.classList.remove('open');
+  cartDrawer.classList.toggle('open');
+  overlay.classList.toggle('show');
+  overlay.setAttribute('aria-hidden', !overlay.classList.contains('show'));
+});
+overlay.addEventListener('click', ()=> {
+  leftSidebar.classList.remove('open');
+  cartDrawer.classList.remove('open');
+  overlay.classList.remove('show');
+  overlay.setAttribute('aria-hidden', 'true');
+});
+
+/* ===== Cart (localStorage) ===== */
+let CART = JSON.parse(localStorage.getItem('elitez_cart') || '[]');
+function saveCart(){ localStorage.setItem('elitez_cart', JSON.stringify(CART)); renderCart(); updateMiniCount(); }
+function updateMiniCount(){ const c = CART.reduce((s,i)=>s+i.qty,0); if(c>0){ cartCountEl.style.display='inline-block'; cartCountEl.textContent=c; } else cartCountEl.style.display='none'; }
+
+function addToCartId(id, qty=1){
+  const prod = PRODUCTS.find(p=>p.id===id); if(!prod) return;
+  const found = CART.find(i=>i.id===id);
+  if(found) found.qty += qty; else CART.push({id:prod.id,title:prod.title,price:prod.price,img:prod.img,qty:qty});
+  saveCart();
+  cartDrawer.classList.add('open'); overlay.classList.add('show');
+}
+
+function renderCart(){
+  const list = document.getElementById('cartList');
+  list.innerHTML='';
+  if(CART.length===0){ list.innerHTML='<div style="color:#64748b;padding:6px">Your cart is empty.</div>'; document.getElementById('cartSubtotal').innerText='$0.00'; return; }
+  let total=0;
+  CART.forEach((it,idx)=>{
+    total += it.price*it.qty;
+    const div = document.createElement('div'); div.className='cart-item';
+    div.innerHTML = `<div style="display:flex;gap:10px;align-items:center"><img src="${it.img}" alt="${it.title}" style="width:64px;height:64px;object-fit:cover;border-radius:8px"><div><div style="font-weight:700">${it.title}</div><div style="color:#64748b;font-size:13px">$${it.price.toFixed(2)}</div></div></div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="small-btn" data-action="dec" data-idx="${idx}">-</button>
+          <div style="min-width:28px;text-align:center">${it.qty}</div>
+          <button class="small-btn" data-action="inc" data-idx="${idx}">+</button>
+        </div>
+        <button class="small-btn" data-action="rm" data-idx="${idx}" style="background:#fee2e2;border-color:#fecaca;color:#b91c1c">Remove</button>
+      </div>`;
+    list.appendChild(div);
+  });
+  document.getElementById('cartSubtotal').innerText = '$' + total.toFixed(2);
+  // attach actions
+  list.querySelectorAll('[data-action]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const idx = Number(btn.dataset.idx);
+      const act = btn.dataset.action;
+      if(act==='inc'){ CART[idx].qty +=1; saveCart(); }
+      if(act==='dec'){ CART[idx].qty -=1; if(CART[idx].qty<=0) CART.splice(idx,1); saveCart(); }
+      if(act==='rm'){ CART.splice(idx,1); saveCart(); }
+    });
+  });
+}
+
+document.getElementById('clearCart').addEventListener('click', ()=>{ CART=[]; saveCart(); });
+
+document.getElementById('checkoutBtn').addEventListener('click', ()=>{
+  if(CART.length===0) return alert('Cart is empty');
+  alert('Checkout demo — integrate payment gateway to process orders.');
+});
+
+/* ===== Product modal ===== */
+const modal = document.getElementById('productModal');
+const modalImg = document.getElementById('modalImg');
+const modalTitle = document.getElementById('modalTitle');
+const modalPrice = document.getElementById('modalPrice');
+const modalDesc = document.getElementById('modalDesc');
+const qtyVal = document.getElementById('qtyVal');
+let modalQty = 1;
+let currentModalId = null;
+
+function openProductModal(id){
+  const p = PRODUCTS.find(x=>x.id===id); if(!p) return;
+  currentModalId = id;
+  modalImg.innerHTML = `<img src="${p.img}" alt="${p.title}" style="width:100%;height:100%;object-fit:cover">`;
+  modalTitle.innerText = p.title;
+  modalPrice.innerText = '$' + p.price.toFixed(2);
+  modalDesc.innerText = p.desc;
+  modalQty = 1; qtyVal.innerText = modalQty;
+  modal.classList.add('open'); modal.setAttribute('aria-hidden','false');
+}
+
+document.getElementById('incQty').onclick = ()=>{ modalQty +=1; qtyVal.innerText = modalQty; };
+document.getElementById('decQty').onclick = ()=>{ if(modalQty>1){ modalQty -=1; qtyVal.innerText = modalQty; } };
+document.getElementById('addModalBtn').onclick = ()=>{ addToCartId(currentModalId, modalQty); modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); };
+document.getElementById('closeModal').onclick = ()=>{ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); };
+
+/* ===== Attach view buttons after render ===== */
+function attachViewButtons(){
+  document.querySelectorAll('.card .small-btn').forEach(b=>{
+    b.addEventListener('click', ()=> openProductModal(b.dataset.id));
+  });
+}
+
+/* ===== Search ===== */
+document.getElementById('searchInput').addEventListener('input', (e)=>{
+  const q = e.target.value.trim().toLowerCase();
+  if(!q){ renderProducts(PRODUCTS); return; }
+  const filtered = PRODUCTS.filter(p=> p.title.toLowerCase().includes(q));
+  renderProducts(filtered);
+});
+
+/* ===== View All button ===== */
+document.getElementById('viewAllBtn').addEventListener('click', ()=>{ document.getElementById('productsGrid').scrollIntoView({behavior:'smooth'}); });
+
+/* ===== init ===== */
+renderCart();
+updateMiniCount();
+
+// ensure overlay closes things when pressing Escape
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ leftSidebar.classList.remove('open'); cartDrawer.classList.remove('open'); overlay.classList.remove('show'); modal.classList.remove('open'); } });
+
+// click outside modal to close
+document.addEventListener('click', (e)=>{
+  if(modal.classList.contains('open')){
+    const inside = modal.querySelector('.modal-card').contains(e.target);
+    if(!inside) { modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
+  }
+});
+
+</script>
+</body>
+</html>
